@@ -1,0 +1,2 @@
+0 Real cats
+1 AI cats
