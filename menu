@@ -1,0 +1,353 @@
+Libaries:
+pip install tensorflow==2.12.0
+pip install keras==2.12.0
+pip install pillow
+pip install pymorphy3
+pip install telebot
+
+import telebot
+from keras.models import load_model
+from PIL import Image, ImageOps
+import numpy as np
+
+# Initialize your bot with a real token
+bot = telebot.TeleBot('8117478115:AAHkIz7ynmjoH62pl4Vu_7PKOl_jjTl0oPY')  # Replace with your actual token
+
+# Load model and labels only once
+model = load_model("keras_model.h5", compile=False)
+class_names = open("labels.txt", "r").readlines()
+
+Honda_info = '''Founded: 1937 by Kiichiro Toyoda
+Headquarters: Toyota City, Japan
+Employees: Over 360,000 (2023)
+Revenue: ~$275 billion (2023)
+Industry: Automobile manufacturing
+
+Global Reach
+Operates in 170+ countries
+
+Brands: Toyota, Lexus, Daihatsu, Hino Motors
+
+Former brand: Scion
+
+Popular Models
+Corolla – Best-selling car globally
+
+Camry – Top mid-size sedan
+
+Prius – Pioneer hybrid
+
+Hilux, Land Cruiser, Tacoma – Reliable pickups/SUVs
+
+RAV4, Lexus RX – Popular SUVs
+
+Green Tech & Innovation
+Hybrid Leader: Prius launched in 1997
+
+EV Push: bZ4X (2022), $13.5B battery investment
+
+Fuel Cells: Toyota Mirai
+
+Safety: Toyota Safety Sense suite
+
+Autonomous Driving: Ongoing R&D and partnerships
+
+Toyota Production System (TPS)
+Just-in-Time (JIT): Efficient inventory use
+
+Jidoka: Quality control with employee empowerment
+
+Focus on Kaizen (continuous improvement)
+
+Environmental & Social Efforts
+Hybrid/electric focus to reduce emissions
+
+Sustainable manufacturing & hydrogen tech
+
+Active in global charity, education, and diversity programs
+
+Recent Highlights
+Partnered with Subaru on EVs (bZ4X, Solterra)
+
+Promotes hydrogen infrastructure (esp. in California)
+
+Key Milestones
+1936: First car (Model AA)
+
+1997: Prius hybrid debut
+
+2020: $13B EV investment announcement'''
+
+Toyota_info = '''Founded: 1948 by Soichiro Honda & Takeo Fujisawa
+Headquarters: Tokyo, Japan
+Employees: 200,000+ (2023)
+Revenue: ~$130 billion (2023)
+Industries: Automobiles, Motorcycles, Power Equipment, Aviation
+
+Global Presence
+Operates in 150+ countries
+
+Manufacturing in North America, Europe, Asia, South America
+
+Products: Cars, motorcycles, power equipment, aircraft (HondaJet)
+
+Popular Models
+Civic – Fuel-efficient compact car
+
+Accord – Reliable mid-size sedan
+
+CR-V, HR-V, Pilot – Popular SUVs
+
+Odyssey – Family-friendly minivan
+
+Ridgeline – Unique pickup truck
+
+Fit, Insight – Compact & hybrid models
+
+Technology & Innovation
+Honda Sensing: Safety tech suite (lane assist, adaptive cruise, etc.)
+
+Hybrid/EV: Insight, Clarity, Honda e
+
+Fuel Cell: Clarity Fuel Cell
+
+Autonomous: Partnered with Cruise (GM)
+
+Manufacturing Philosophy
+Monozukuri: Focus on craftsmanship
+
+Kaizen: Continuous improvement
+
+Lean Manufacturing: Flexibility & efficiency
+
+Environmental Initiatives
+Hybrid & electric vehicles (e.g., Honda e, CR-V Hybrid)
+
+Carbon Neutrality Goal: By 2050
+
+Investment in hydrogen & green tech
+
+Motorcycles
+World's largest motorcycle manufacturer
+
+Key models: Super Cub, CBR, CRF, Gold Wing
+
+Challenges & Outlook
+Competing in EV space vs. Tesla & others
+
+EV/hydrogen R&D with General Motors
+
+Long-term focus on sustainability & carbon neutrality
+
+Social Responsibility
+Environmental efforts
+
+STEM education support
+
+Disaster relief & community programs
+
+Key Milestones
+1949: First motorcycle – Honda D-Type
+
+1973: Civic launch
+
+1999: Insight hybrid debut
+
+2018: Pledged carbon neutrality by 2050
+
+2020: EV partnership with GM
+
+Recognition
+Consistently top-ranked for quality, safety, and reliability
+
+Civic & Accord regularly win awards
+
+Honored for hybrid innovations (Insight, Clarity)'''
+
+Volkswagen_info = '''Founded: 1937 (by the German government)
+Headquarters: Wolfsburg, Germany
+Parent Company: Volkswagen Group
+Employees: ~670,000 (2023)
+Revenue: ~$320 billion (2023)
+Industry: Automotive (mass-market & luxury)
+
+Global Presence
+Operates in over 150 countries
+
+Major markets: Europe, China, North America
+
+Owns brands like Volkswagen, Audi, Porsche, Skoda, SEAT, Lamborghini, Bentley, and Bugatti
+
+Popular Models
+Golf – Iconic hatchback, popular globally
+
+Passat – Reliable family sedan
+
+Tiguan – Best-selling SUV
+
+Jetta – Compact sedan
+
+ID. Series (ID.3, ID.4) – New electric vehicle lineup
+
+Polo – Subcompact for urban use
+
+Arteon, Touareg, Taos – Mid-size and luxury crossovers
+
+Technology & Innovation
+MEB Platform – Modular EV platform for all VW EVs
+
+Car.Software Org – VW’s in-house software unit to boost digital transformation
+
+Focus on connectivity, autonomous driving, and battery innovation
+
+Sustainability & EV Transition
+Goal: Carbon-neutral by 2050
+
+Invested over €50 billion in EV and battery development
+
+ID.4 and ID. Buzz (electric van) lead the shift to electric mobility
+
+Major push for EVs especially in Europe and China
+
+Challenges & Outlook
+Rebuilding trust post-Dieselgate emissions scandal (2015)
+
+Competing in a fast-evolving EV landscape (vs. Tesla, BYD)
+
+Digital transformation & EV cost management remain key priorities
+
+Recognition
+One of the world’s top-selling carmakers
+
+Known for durability, German engineering, and innovation
+
+Winning awards for the ID. series and sustainability initiatives
+
+'''
+
+Mercedes_Benz_info = '''Founded: 1926 (by Karl Benz and Gottlieb Daimler)
+Headquarters: Stuttgart, Germany
+Parent Company: Mercedes-Benz Group AG
+Employees: ~170,000 (2023)
+Revenue: ~$150 billion (2023)
+Industry: Luxury vehicles, commercial vehicles
+
+Global Presence
+Sold in 190+ countries
+
+Manufacturing in Germany, U.S., China, South Africa, and more
+
+Known worldwide for luxury, performance, and engineering excellence
+
+Popular Models
+C-Class – Best-selling compact luxury sedan
+
+E-Class – Executive sedan known for comfort and tech
+
+S-Class – Flagship luxury sedan with cutting-edge innovation
+
+GLE, GLC, GLA – Popular luxury SUVs
+
+G-Class – Iconic off-road SUV
+
+AMG Line – High-performance variants
+
+EQ Line – All-electric vehicles (e.g., EQS, EQB)
+
+Technology & Innovation
+MBUX: Advanced infotainment with AI and voice control
+
+Drive Pilot: Semi-autonomous driving tech (Level 3 in some regions)
+
+Electric Vehicles: Expanding EQ series for full electrification
+
+Safety Leader: Pioneered airbags, ABS, and crash safety systems
+
+Sustainability
+Goal: Carbon-neutral fleet by 2039
+
+Focus on EVs, sustainable materials, and battery tech
+
+Green factories & renewable energy use in production
+
+Heritage & Prestige
+Inventor of the first automobile (1886)
+
+Long history in motorsports (Formula 1, endurance racing)
+
+Symbol of prestige, performance, and German engineering
+
+Challenges & Outlook
+Competing in luxury EV market (vs. Tesla, BMW, Audi)
+
+Transitioning from combustion to full electric lineup
+
+Investing heavily in AI, battery tech, and digital experiences
+
+Recognition
+Consistently ranked among top luxury brands
+
+S-Class and EQS known for innovation and safety
+
+Multiple global awards for design, tech, and performance
+
+'''
+
+@bot.message_handler(commands=['start'])
+def send_welcome(message):
+    bot.reply_to(message, "Hi! I'm your Telegram Bot. try /Volkswagen_info /Mercedes_Benz_info /Toyota_info /Honda_info or Send me a car image and I will analyze it .")
+
+@bot.message_handler(commands=['Toyota_info'])
+def send_welcome(message):
+    bot.reply_to(message, Toyota_info)
+
+@bot.message_handler(commands=['Honda_info'])
+def send_welcome(message):
+    bot.reply_to(message, Honda_info)
+
+@bot.message_handler(commands=['Volkswagen_info'])
+def send_welcome(message):
+    bot.reply_to(message, Volkswagen_info)
+
+@bot.message_handler(commands=['Mercedes_Benz_info'])
+def send_welcome(message):
+    bot.reply_to(message, Mercedes_Benz_info)
+
+@bot.message_handler(content_types=['photo'])
+def handle_photo(message):
+    try:
+        # Get the highest resolution photo
+        file_id = message.photo[-1].file_id
+        file_info = bot.get_file(file_id)
+        downloaded_file = bot.download_file(file_info.file_path)
+
+        # Save photo temporarily
+        photo_path = f'temp_{file_id}.jpg'
+        with open(photo_path, 'wb') as new_file:
+            new_file.write(downloaded_file)
+
+        # Prepare image for prediction
+        image = Image.open(photo_path).convert("RGB")
+        image = ImageOps.fit(image, (224, 224), Image.Resampling.LANCZOS)
+        image_array = np.asarray(image)
+        normalized_image_array = (image_array.astype(np.float32) / 127.5) - 1
+        data = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
+        data[0] = normalized_image_array
+
+        # Run prediction
+        prediction = model.predict(data)
+        index = np.argmax(prediction)
+        class_name = class_names[index].strip()
+        confidence_score = prediction[0][index]
+
+        # Respond with result
+        response = f"Here are your car's analyzing results: Prediction: {class_name}\nConfidence: {confidence_score*100:.2f}%"
+        print(confidence_score)
+        if confidence_score < 0.5:
+            response = 'Sorry, Could not analyze this image'
+        bot.reply_to(message, response)
+
+    except Exception as e:
+        bot.reply_to(message, f"Oops, something went wrong: {e}")
+
+bot.polling()
